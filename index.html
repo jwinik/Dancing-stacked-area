@@ -1,242 +1,291 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-    <meta charset="utf-8">
-    <!-- set styles on the top -->
-    <style>
-        .chart-container {
-            max-width: 1050px;
-            /* border: 2px solid red; */
-            margin: 0 auto;
-            /* auto centers the div */
-            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-        }
+    <head>
+        <meta charset="utf-8">
+        <style>
+            .chart-container {
+                max-width: 1050px;
+                margin: 0 auto;
+                font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            }
 
-        svg {
-            /* border: 2px solid purple; */
-            overflow: visible;
-        }
+            svg {
+                overflow: visible;
+            }
 
-        h1 {
-            margin: 0 auto;
-        }
+            h1 {
+                margin: 0 auto;
+            }
 
-        .x .tick line {
-            stroke: rgba(0, 0, 0, .2);
-        }
+            .x .tick line {
+                stroke: rgba(0, 0, 0, .2);
+            }
 
-        .y .tick line {
-            stroke: rgba(0, 0, 0, .2);
-        }
+            .y .tick line {
+                stroke: rgba(0, 0, 0, .2);
+            }
 
-        .x .domain {
-            display: none;
-        }
+            .x .domain {
+                display: none;
+            }
 
-        .y .domain {
-            display: none;
-        }
+            .y .domain {
+                display: none;
+            }
 
-        .y .tick text {
-            font-size: 14px;
-            fill: #333;
+            .y .tick text {
+                font-size: 14px;
+                fill: #333;
 
-        }
+            }
 
-        .x .tick text {
-            font-size: 14px;
-            fill: #333;
-        }
+            .x .tick text {
+                font-size: 14px;
+                fill: #333;
+            }
 
-        .label {
-            font-size: 35px;
-            font-weight: 200;
-        }
+            .label {
+                font-size: 35px;
+                font-weight: 200;
+            }
 
-        .axis-label {
-            font-size: 12px;
-            text-transform: uppercase;
-        }
+            .axis-label {
+                font-size: 12px;
+                text-transform: uppercase;
+            }
 
-        .source {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-    </style>
-</head>
+            .source {
+                max-width: 1000px;
+                margin: 0 auto;
+            }
 
-<body>
-    <div class="chart-container">
-        <h1 class="headline">
-            Healthcare by income in 2020
-        </h1>
+            .highlight {
+                color: blueviolet;
+                font-family: Arial;
+                position: fixed;
+                top: 190;
+                right: 300;
+                font-size: 40
 
-        <svg width="1050px" height="575px">
-        </svg>
-        <p class="source">Source: Current Population Survey, analysis by Matt Bruenig</p>
+            }
 
-    </div>
-</body>
+            .legend {
+                    font-family: Arial;
+            }
+        </style>
+    </head>
 
-<script src="https://d3js.org/d3.v6.min.js"></script>
-<!-- we're using d3 version 6 (the latest version) for all out work -->
+    <body>
+        <div class="chart-container">
+            <h1 class="headline">
+                Healthcare by income in  2009 and 2020
+            </h1>
 
-<script>
-    console.log({ d3 })
-
-    let width = 800;
-    let height = 500;
-
-    let svg = d3.select("body")
-        .select("svg")
-
-    d3.csv("healthcare-disposable-inc.csv").then(function (data) {
-
-        console.log({data})
-
-        let margin = { top: 10, right: 10, bottom: 10, left: 30 };
-
-        let sel_cols = [
-            "Medicaid",
-            "Medicare",
-            "Medicare+Medicaid",
-            "Employer",
-            "Uninsured",
-            "Direct Purchase",
-            "Subsidized Exchange",
-            "CHIP",
-            "Military",
-            "Other"]
-
-        let sel_colors = [
-            "#f44336", // "Medicaid",
-            "#FF9800", // "Medicare",
-            "#FDD835", // "Medicare+Medicaid",
-            "#FFF8E1", // "Employer",
-            "#26A69A", // "Uninsured",
-            "#4DD0E1", // "Direct Purchase",
-            "#F06292", // "Subsidized Exchange",
-            "#5C6BC0", // "CHIP",
-            "#90A4AE", // "Military",
-            "#E0E0E0"  // "Other"
-        ]
-
-
-        let d2020 = data.filter(d => d.type == "smoothed" && d.year == 2020);
-        
-        // filtering for dancing part
-        let year_option = "2009";
-        let df_2009 =  data.filter(d => d.year == "2009")
-        let df_2020 =  data.filter(d => d.year == "2020")
-        //
-
-        
-        // let d2009 = data.filter(d => d.year == 2009)
-
-        console.log({d2020})
-
-    //     //https://github.com/d3/d3-shape#stacks
-        let series2020 = d3.stack().keys(sel_cols)(d2020);
-        console.log({series2020})
-
-    //     // https://github.com/d3/d3-scale#ordinal-scales
-        let color = d3.scaleOrdinal()
-            .domain(sel_cols)
-            .range(sel_colors)
-
-        let x = d3.scaleLinear()
-            .domain([0,100])
-            .range([margin.left, width])
-        
-        let y = d3.scaleLinear()
-            .domain([0,1])
-            .range([height - margin.bottom, margin.top])
-
-    //     //https://github.com/d3/d3-shape#areas
-        let area = d3.area()
-            .x(d => x(d.data.Percentile))
-            .y0(d => y(d[0]))
-            .y1(d => y(d[1]))
-        
-        let xAxisSettings = d3.axisBottom(x)
-            .tickSize(6)
-            .tickPadding(6)
-            .tickValues([5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95])
-            .tickFormat(d3.format(".0f"))
+            <svg width="1050px" height="575px">
+            </svg>
+            <p class="source">
+                Source: Current Population Survey, analysis by Matt Bruenig
+            </p>
             
-        let xAxis = svg.append("g")
-            .attr("class", "x axis")
-            .call(xAxisSettings)
-            .call(g => g.selectAll(".domain").remove())
-            .attr("transform", `translate(0, ${height - margin.bottom})`)
-        
-        let yAxisSettings = d3.axisLeft(y)
-            .ticks(5)
-            .tickValues([.2, .4, .6, .8])
-            .tickSize(6)
-            .tickPadding(4)
-            .tickFormat(d3.format(".0%"))
+            <div>
+                <span class = "highlight">2009</span>
+            <div>
+        </div>
+
+
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+
+        <script>
+         
+            let width = 800
+            let height = 500
+
+            let svg = d3.select("body").select("svg")
+
+            let margin = {top: 50, right: 20, bottom: 30, left: 10}
+
+            d3.csv("healthcare-disposable-inc.csv").then(function (data) {
+                console.log("loaded data")
+
+                console.log(data)
+
+                let sel_cols = [
+                    "Medicaid",
+                    "Medicare",
+                    "Medicare+Medicaid",
+                    "CHIP",
+                    "Military",
+                    "Direct Purchase",
+                    "Employer",
+                    "Other",
+                    "Uninsured",
+                    "Subsidized Exchange"
+                ]
+
+                let sel_colors = [
+                    "#FFC914",
+                    "#E4572E",
+                    "#F29021",
+                    "#A40E4C",
+                    "#3E5641",
+                    "#17BEBB",
+                    "#EDF0DA",
+                    "#CAE5FF",
+                    "#067BC2",
+                    "#61C9A8"
+                ]
+
+                let year_choice = "2009";
+
+                let df2009 = data.filter(d => d.year == "2009")
+                let df2020 = data.filter(d => d.year == "2020")
+
+                console.log(df2009)
+
+                let series09 = d3.stack()
+                    .keys(sel_cols)(df2009)
+
+                    console.log({series09})
+
+                let series20 = d3.stack()
+                    .keys(sel_cols)(df2020)
+
+                console.log({series20})
+
+                let hed = d3.select(".highlight")
+
+                let x = d3.scaleLinear()
+                    .domain([0, 100])
+                    .range([margin.left, width-margin.right])
+
+                let y = d3.scaleLinear()
+                    .domain([0, 1])
+                    .range([height-margin.bottom, margin.top])
+
+                let color = d3.scaleOrdinal()
+                    .domain(sel_cols)
+                    .range(sel_colors)
             
-        let yAxis = svg
-            .append("g")
-            .attr("class", "y axis")
-            .call(yAxisSettings)
-            .call(g => g.selectAll(".domain").remove())
-
-        // Labeling 
-        svg.append("g")
-            .selectAll("path")
-            .data(series2020)
-            .join("path")
-            .attr("class", d => d.key)
-            .attr("fill", d => color(d.key))
-            .attr("d", area)
-            .append("title")
-
-        svg.append("text")
-            .attr("class", "label")
-            .attr("x", 500)
-            .attr("y", 250)
-            .text("Employer")
-            .style("fill", "gray")
-
-        svg.append("text")
-            .attr("class", "label")
-            .attr("x", 75)
-            .attr("y", 450)
-            .text("Medicaid")
-            .style("fill", "white")
+                let yAxisSettings = d3.axisLeft(y)
+                    .ticks(5)
+                    .tickValues([.2, .4, .6, .8])
+                    .tickSize(6)
+                    .tickPadding(4)
+                    .tickFormat(d3.format(".0%"))
             
-        svg.append("text")
-            .attr("class", "label")
-            .attr("x", 40)
-            .attr("y", 300)
-            .text("Medicare")
-            .style("fill", "white")
-            svg.append("text")
-
-        svg.append("text")
-            .attr("class", "axis-label")
-            .attr("x", width / 2)
-            .attr("y", height + 40)
-            .text("income percentile")
-            .attr("text-anchor", "middle")
+                let xAxisSettings = d3.axisBottom(x)
+                    .ticks(10)
+                    .tickSize(12) 
+                    .tickValues([5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95])
             
-        svg.append("text")
-            .attr("class", "axis-label")
-            .attr("x", width - 30)
-            .attr("y", height + 40)
-            .text("higher income")
-            .attr("text-anchor", "end")
-            
-             
-        svg.append("text")
-            .attr("class", "axis-label")
-            .attr("x", 30)
-            .attr("y", height + 40)
-            .text("lower income")
-            .attr("text-anchor", "start")
-    })
+                let yAxisTicks = svg.append("g")
+                    .attr("class", "y axis")
+                    .call(yAxisSettings)
+                    .call(g => g.selectAll(".domain").remove())
 
-</script>
+                let xAxisTicks = svg.append("g")
+                    .attr("class", "x axis")
+                    .call(xAxisSettings)
+                    .call(g => g.selectAll(".domain").remove())
+                    .attr("transform", `translate(0, ${height - margin.bottom})`)
+
+                let area = d3.area()
+                    .x(d => x(d.data.Percentile))
+                    .y0(d => y(d[0]))
+                    .y1(d => y(d[1]))
+
+                let paths = svg.append("g")
+                    .attr("class", "paths")
+
+                let path;
+
+                paths
+                    .selectAll(".path")
+                    .data(series09, d => d.Percentile)
+                    .join("path")
+                    .attr("fill", d => {return color(d.key)})
+                    .attr("d", area)
+            
+                function update() {
+                    console.log("update")
+                    if (year_choice == 2009) {
+                        year_choice = 2020
+                        dance(series20)
+                        hed.html("<span class = 'highlight'> 2020 </span>")
+                    } else {
+                        year_choice = 2009
+                        dance(series09)
+                        hed.html("<span class = 'highlight'> 2009 </span>")
+                    }
+                }
+
+                function dance(filtered_data) {
+                    paths
+                        .selectAll(".path")
+                        .data(filtered_data, d => d.Percentile)
+                        .join("path")
+                        .attr("fill", d => {return color(d.key)})
+                        .attr("class", d => { 
+                            console.log(d) 
+                            return d.key})
+                        .transition()
+                        .duration(300)
+                        .ease(d3.easeLinear)
+                        .attr("d", area)
+
+                }
+
+                var timer = d3.interval(update, 2000)
+
+                var size = 20
+                svg.append("text")
+                    .attr("class", "axis-label")
+                    .attr("x", width / 2)
+                    .attr("y", height + 40)
+                    .text("income percentile")
+                    .attr("text-anchor", "middle")
+            
+                svg.append("text")
+                    .attr("class", "axis-label")
+                    .attr("x", width - 30)
+                    .attr("y", height + 40)
+                    .text("higher income")
+                    .attr("text-anchor", "end")
+                    
+                        
+                svg.append("text")
+                    .attr("class", "axis-label")
+                    .attr("x", 30)
+                    .attr("y", height + 40)
+                    .text("lower income")
+                    .attr("text-anchor", "start")
+                
+                svg.selectAll("boxes")
+                    .data(sel_cols)
+                    .enter()
+                    .append("rect")
+                    .attr("x", 800)
+                    .attr("y", function (d, i) { return 100 + i*(size+5)})
+                    .attr("width", size)
+                    .attr("height", size)
+                    .style("fill", function (d) {return color(d)})
+                    .attr("class", "square")
+
+                svg.selectAll("category text")
+                    .data(sel_cols)
+                    .attr("class", "legend")
+                    .enter()
+                    .append("text")
+                    .attr("x", 800 + size*1.2)
+                    .attr("y", function (d, i) {return 100 + i*(size+5)+(size/2)})
+                    .style("fill", function (d) {return color(d)})
+                    .text(function (d) {return d})
+                    .attr("text-anchor", "left")
+                    .attr("class", "legend")
+
+                })
+    
+            </script>
+    </body>
+</html>    
