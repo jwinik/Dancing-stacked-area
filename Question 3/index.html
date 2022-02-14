@@ -3,33 +3,43 @@
 
 <head>
     <meta charset="utf-8">
-    <!-- set styles on the top -->
     <style>
         .chart-container {
             max-width: 1050px;
-            /* border: 2px solid red; */
             margin: 0 auto;
-            /* auto centers the div */
             font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
         }
 
+        .Brady {
+            font-family: "nyt-franklin", arial, helvetica, sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            font-weight: bold;
+        }
+
+        .Other-players {
+            font-family: "nyt-franklin", arial, helvetica, sans-serif;
+            font-size: 13px;
+            font-weight: 200;
+        }
+
         svg {
-            /* border: 2px solid purple; */
             overflow: visible;
         }
 
         h1 {
             margin-left: 30px;
             margin-bottom: 0;
-            /* border: 2px solid green; */
         }
 
-        .x .tick line {
-            stroke: rgba(0, 0, 0, .2);
+        .x.axis .tick line {
+            /* stroke: #f0f0f0; */
+            /* font-family: sans-serif; */
+            /* font-size: 10; */
         }
 
-        .y .tick line {
-            stroke: rgba(0, 0, 0, .2);
+        .y.axis .tick line {
+            stroke: #f0f0f0;
         }
 
         .x .domain {
@@ -56,7 +66,7 @@
 <body>
     <div class="chart-container">
         <h1 class="headline">
-            Bus Ridership
+            No. 4 Pro Bowl Selections
         </h1>
 
         <svg width="1050px" height="1000px">
@@ -92,7 +102,7 @@
     //objects
     //functions
 
-    d3.csv("bus-ridership.csv").then(function (data) {
+    d3.tsv("cumulative-stats.tsv").then(function (data) {
 
         //when temp is loaded, then pass data into this block
         //all references to the data need to be in this block
@@ -102,13 +112,15 @@
 
 
         data.forEach(function (row) {
-            row.date = new Date( row.date + "T00:00")
-            row.indexed_ave = +row.indexed_ave 
+            row.pb_games = +row.pb_games
         })
 
-        
-
-        console.log(data)
+        d3.json("player-lookup.json").then(function(lookup_data) {
+            data.forEach(function (d) {
+            d.name = lookup_data[d.player_id].player_name
+            })
+        })
+        console.log({data})
 
 
         let margin = { top: 30, right: 10, bottom: 10, left: 30 };
@@ -116,13 +128,13 @@
         //d3 scales for the x and y axis
         //domain takes the data we have and maps them into SVG space
         //in this case we need to use scaleTime because we're dealin time data
-        let x = d3.scaleTime()
-            .domain(d3.extent(data.map(function (d) { return d.date }))) //d3 extent
+        let x = d3.scaleLinear()
+            .domain(d3.extent(data.map(function (d) { return d.year }))) //d3 extent
             .range([margin.left, width - margin.right])
 
         //in this case we need to use scaleLinear because we're dealin linear data
         let y = d3.scaleLinear()
-            .domain(d3.extent(data.map(function (d) { return d.indexed_ave })))
+            .domain(d3.extent(data.map(function (d) { return d.pb_games })))
             .range([height - margin.bottom, margin.top])
 
 
@@ -130,18 +142,19 @@
         //https://github.com/d3/d3-axis
         // https://github.com/d3/d3-time-format
         //https://github.com/d3/d3-format
-        let yAxisSettings = d3.axisLeft(y) //set axis to the left
-            .ticks(5) //approx how many ticks, the function will not necesarily give you that number
-            .tickSize(-width) //size of tick lines
-            .tickFormat(d3.format("+.0%")) //what format do you want https://github.com/d3/d3-format 
+        let yAxisSettings = d3.axisRight(y) //set axis to the left
+            .ticks(8)
+            .tickSize(width)
+            .tickValues([2, 4, 6, 8, 10, 12, 14])
+            .tickFormat(d3.format("d"))
             .tickPadding(10) //distance from tick labels to tick marks
             
-
 
         let xAxisSettings = d3.axisBottom(x)
             .ticks(10)
             .tickSize(10)
             .tickPadding(10)
+            .tickFormat(d3.format("d"))
 
         let bg = svg.append("rect")
             .attr("x", margin.left)
@@ -163,17 +176,18 @@
             .attr("transform", `translate(${margin.left},0)`)
 
         let line = d3.line() //define a line function
-            .defined(d => !isNaN(d.indexed_ave))
-            .x(function (d) { return x(d.date) }) //accessing date 
-            .y(function (d) { return y(d.indexed_ave) }) //accesssing value 
+            // .defined(d => !isNaN(d.indexed_ave))
+            .x(function (d) { return x(d.year) }) //accessing date 
+            .y(function (d) { return y(d.pb_games) }) //accesssing value 
 
 
         
-        let grouped_data = d3.group(data, d => d.agency);
+        let grouped_data = d3.group(data, d => d.player_id);
 
-        console.log(grouped_data)
+        console.log({grouped_data})
 
-        let agencies = Array.from(grouped_data.keys())
+        // let current_players = Array.from(grouped_data.keys())
+        // console.log({current_players})
 
         let line_path = svg.append("g")
         .selectAll(".line")
@@ -187,19 +201,54 @@
         })
         .style("fill", "none")
         .style("stroke", d => {
-            if(d[0] == "San Francisco Municipal Railway") {
-                return "blue"
-            } else {
-                return "#999"
+            if((d[0] == "BradTo00") || (d[0] == "RodgAa00") ||
+            (d[0] == "WilsRu00") || (d[0] == "RoetBe00") ||
+            (d[0] == "RyanMa00") || (d[0] == "MahoPa00") ||
+            (d[0] == "DaltAn00") || (d[0] == "PresDa01") ||
+            (d[0] == "GoffJa00") || (d[0] == "MurrKy00") ||
+            (d[0] == "HerbJu00") || (d[0] == "TannRy00"))
+            {
+                return "#33B9FF"
+            } else if ((d[0] == "BreeDr00") || (d[0] == "MariDa00") ||
+                        (d[0] == "TarkFr00") || (d[0] == "UnitJo00"))
+                    {
+                        return "#555"
+                } else { 
+                    return "#DDD"
             }
         })
         .style("stroke-width", d => {
-            if(d[0] == "San Francisco Municipal Railway") {
+            if(d[0] == "BradTo00") {
                 return "3px"
             } else {
                 return "1px"
             }
         })
+
+        let brady = svg.append("text")
+        .attr("y", height - 480)
+        .attr("x", width - 50)
+        .attr("class", "Brady")
+        .text("Brady");
+
+        let tarkenton = svg.append("text")
+        .attr("y", height - 281)
+        .attr("x", width - 460)
+        .attr("class", "Other-players")
+        .text("Tarkenton");
+
+        let marino = svg.append("text")
+        .attr("y", height - 281)
+        .attr("x", width - 250)
+        .attr("class", "Other-players")
+        .text("Marino");
+
+        let unitas = svg.append("text")
+        .attr("y", height - 312)
+        .attr("x", width - 507)
+        .attr("class", "Other-players")
+        .text("Unitas");
+        
 
         let baseline = svg.append("line")
         .attr("x1", margin.left)
@@ -208,8 +257,6 @@
         .attr("y2", y(0))
         .style("stroke", "black")
         .style("stroke-width", "2px")
-
-
 
 
     })
