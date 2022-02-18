@@ -66,7 +66,7 @@
 <body>
     <div class="chart-container">
         <h1 class="headline">
-            No. 4 Pro Bowl Selections
+            No. 4 Pro Bowl Selections: By Year
         </h1>
 
         <svg width="1050px" height="1000px">
@@ -80,16 +80,9 @@
 
 <script>
     console.log({ d3 })
-    //https://observablehq.com/@mbostock/global-temperature-trends
-
-    //cool tricks for javascript arrays
-    //objects
-    //look up tables
-    //looping, or for each
 
     let width = 800;
     let height = 500;
-
     let svg = d3.select("body")
         .select("svg")
 
@@ -125,14 +118,10 @@
 
         let margin = { top: 30, right: 10, bottom: 10, left: 30 };
 
-        //d3 scales for the x and y axis
-        //domain takes the data we have and maps them into SVG space
-        //in this case we need to use scaleTime because we're dealin time data
         let x = d3.scaleLinear()
             .domain(d3.extent(data.map(function (d) { return d.year }))) //d3 extent
             .range([margin.left, width - margin.right])
 
-        //in this case we need to use scaleLinear because we're dealin linear data
         let y = d3.scaleLinear()
             .domain(d3.extent(data.map(function (d) { return d.pb_games })))
             .range([height - margin.bottom, margin.top])
