@@ -99,7 +99,7 @@
         });
 
         
-        svg
+        svg.append("g")
             .selectAll(".states")
             .data(state.features)
             .join("path")
@@ -130,16 +130,11 @@
             .join("circle")
             // .attr("r", d => scaleFuction(d))
             .attr("r", 5)
-            .attr("cx", d => {
-                return path.centroid(d)[0]
-            })
-            .attr("cy", d => {
-                return path.centroid(d)[1]
-            })
+            .attr("cx", d => { return path.centroid(d)[0]})
+            .attr("cy", d => { return path.centroid(d)[1]})
             .style("fill", "orange")
             .style("stroke", "#ccc")
             .style("stroke-width", .2)
-            // .style("fill", d => d.properties.fill)
             .attr("class", d => d.properties.GEOID)
             
         counties.on("mouseover", (event, d) => {
@@ -147,7 +142,7 @@
             
             // Why is the mouseover saying undefined?
             // It looks like the df is missing data?
-            let lang = "In " + d.NAME + ", there were " + d.pop_18_in_poverty + " children in poverty in 2019."
+            let lang = "In " + d.properties.Geo_QName + " county, there were " + d.properties.pop_18_in_poverty + " children in poverty in 2019."
 
             popup
                 .style("opacity", 1)
@@ -155,11 +150,11 @@
                 .style("top", (event.y - 100) + "px")
                 .html(lang)
 
-            svg.select(this)
-                .style("stroke", "black")
-                .style("stroke-width", .8)
-                .style("fill", "black")
-                .raise()
+                svg.select(this)
+                    .style("stroke", "black")
+                    .style("stroke-width", .8)
+                    .style("fill", "black")
+                    .raise()
 
         //    console.log(event)
         })
