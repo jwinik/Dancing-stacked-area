@@ -58,12 +58,11 @@
 
 <script>
     console.log({ d3 })
-    // console.log({ topojson })
+    console.log({ topojson })
 
     // //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
     Promise.all([ //waits for all the data to load, then when loaded will return it all in one array called res
-        d3.json('states.json'),
-        d3.json('bubbles.json')
+        d3.json('bubbles_topo.json'),
     ])
         .then(ready)
         .catch((err) => {
@@ -72,12 +71,10 @@
 
     function ready(res) {
         console.log(res[0])
-        console.log(res[1])
-        let state = res[0]
-        let county = res[1]
+        let raw = res[0]
 
-        // let county = topojson.feature(raw, raw.objects.county);
-        // let state = topojson.feature(raw, raw.objects.state);
+        let county = topojson.feature(raw, raw.objects.county);
+        let state = topojson.feature(raw, raw.objects.state);
 
         let width = 1050;
         let height = 500;
@@ -93,13 +90,13 @@
         let path = d3.geoPath()
             .projection(myProjection)
 
-        // let innerlines = topojson.mesh(raw, raw.objects.state, function (a, b) {
-        //     return a != b;
+        let innerlines = topojson.mesh(raw, raw.objects.state, function (a, b) {
+            return a != b;
         
 
 
         
-        // });
+        });
 
         
         svg.append("g")
@@ -108,13 +105,13 @@
             .join("path")
             .attr("d", path)
             .style("fill", "#eee")
-            .style("stroke", "#333")
+            .style("stroke", "none")
             .style("pointer-events", "none")
 
 
         let states = svg
             .append("path")
-            .attr("d", path)
+            .attr("d", path(innerlines))
             .style("fill", "none")
             .style("stroke", "#333")
             .style("stroke-width", 1)
