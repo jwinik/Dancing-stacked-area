@@ -429,7 +429,33 @@
                 const sel = container.select(`[data-index='${index}']`);
                 const width = sel.attr('data-width');
                 stepSel.classed('is-active', (d, i) => i === index);
-                container.select('.bar-inner').style('width', width);
+                // container.select('.bar-inner').style('width', width);
+                console.log("updateChart")
+                if (index == 0) {
+                    year_choice = 2009
+                    dance(series09)
+                    hed.html("<span class = 'highlight'> 2020 </span>")
+                } else {
+                    index == 1
+                    year_choice = 2020
+                    dance(series20)
+                    hed.html("<span class = 'highlight'> 2009 </span>")
+                }
+                function dance(filtered_data) {
+                    paths
+                        .selectAll(".path")
+                        .data(filtered_data, d => d.Percentile)
+                        .join("path")
+                        .attr("fill", d => {return color(d.key)})
+                        .attr("class", d => { 
+                            console.log(d) 
+                            return d.key})
+                        .transition()
+                        // .duration(300)
+                        .ease(d3.easeLinear)
+                        .attr("d", area)
+
+                    }
             }
 
             function init() {
@@ -437,36 +463,7 @@
                 enterView({ //our main view function
                     selector: stepSel.nodes(),
                     offset: 2.0, //when the slide is 50% away then trigger your chart
-                    enter: el => { //what's supposed to happen when the slide enters?
-                    function update() {
-                        console.log("update")
-                        if ("data-index" == 0) {
-                            year_choice = 2009
-                            dance(series09)
-                            hed.html("<span class = 'highlight'> 2020 </span>")
-                        } else {
-                            "data-index" == 1
-                            dance(series20)
-                            hed.html("<span class = 'highlight'> 2009 </span>")
-                        }
-                    }
-
-                    function dance(filtered_data) {
-                        paths
-                            .selectAll(".path")
-                            .data(filtered_data, d => d.Percentile)
-                            .join("path")
-                            .attr("fill", d => {return color(d.key)})
-                            .attr("class", d => { 
-                                console.log(d) 
-                                return d.key})
-                            .transition()
-                            // .duration(300)
-                            .ease(d3.easeLinear)
-                            .attr("d", area)
-
-                    }
-                            
+                    enter: el => { //what's supposed to happen when the slide enters?    
                         const index = +d3.select(el).attr('data-index'); //extract the data-index attribute. this can be anything: a filter, a date, whatever.
                         updateChart(index);
                     },
